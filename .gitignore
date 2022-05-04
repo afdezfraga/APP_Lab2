@@ -1,0 +1,9 @@
+.vscode/
+dotprod_MPI_Sync 
+mxvnm_MPI_Sync 
+dotprod_MPI_Async 
+mxvnm_MPI_Async
+Eval_pi_integral_MPI_Sync 
+Eval_pi_integral_MPI_Async 
+sqrt 
+sqrt_pipeline
