@@ -21,9 +21,12 @@ En los tres casos, el dato a comunicar es necesario justo después de ser obteni
 ### Evaluación del rendimiento
 -----
 
-tatattatattat
+| .....        | 1 Process | 2 Processes | 4 Processes | 8 Processes | 16 Processes |
+| :-----------:|----------:| -----------:| -----------:| -----------:| ------------:|
+| Blocking     | 4.251 s   | 2.146 s     | 1.091 s     | 0.604 s     | 0.305 s      |
+| Non Blocking | 4.364 s   | 2.160 s     | 1.092 s     | 0.603 s     | 0.304 s      |
 
-taaaatatattat
+Debido a que no se solapan las comunicaciones con ningún cómputo, no se aprecia ninguna mejora.
 
 ## dotprod.c
 
@@ -46,10 +49,16 @@ Sin embargo, respecto a los vectores que distribuimos con `MPI_Scatterv`, ambos 
 ### Evaluación del rendimiento
 -----
 
-tatattatattat
+```sh
+srun dotprod_MPI_Sync 500.000.000
+```
 
-taaaatatattat
+| .....        | 1 Process | 2 Processes | 4 Processes | 8 Processes | 16 Processes |
+| :-----------:|----------:| -----------:| -----------:| -----------:| ------------:|
+| Blocking     | 8.181 s   | 7.026 s     | 7.042 s     | 7.240 s     | 7.246 s      |
+| Non Blocking | 8.331 s   | 6.680 s     | 5.664 s     | 4.885 s     | 4.679 s      |
 
+En este caso el cuello de botella no es encuentra en el computo, sino que lo encontramos en otras partes del programa, (inicialización sequencial de los vectores, reserva de memoria, comunicación de los datos...). Por ello, en este caso, el cambio en el patrón de comunicaciones permite que el programa obtenga un mejor rendimiento.
 
 ## mxvnm.c
 
@@ -92,9 +101,16 @@ En los tres casos, el dato a comunicar es necesario justo después de ser obteni
 ### Evaluación del rendimiento
 -----
 
-tatattatattat
+```sh
+srun mxvnm_MPI_Sync 32568 32568
+```
 
-taaaatatattat
+| .....        | 1 Process | 2 Processes | 4 Processes | 8 Processes | 16 Processes |
+| :-----------:|----------:| -----------:| -----------:| -----------:| ------------:|
+| Blocking     | 13.183 s  | 11.195 s    | 10.396 s    | 10.975 s    | 10.951 s     |
+| Non Blocking | 13.135 s  | 11.376 s    | 9.571 s     | 8.883 s     | 8.367 s      |
+
+Igual que en el caso anterior el cuello de botella no se encuentra en el computo, sino que lo encontramos en otras partes del programa, (inicialización sequencial de los vectores, reserva de memoria, comunicación de los datos...). Por ello, igual que en el caso anterior, el cambio en el patrón de comunicaciones permite que el programa obtenga un mejor rendimiento.
 
 
 ## sqrt.c
@@ -115,7 +131,17 @@ Donde el nuevo parámetro indica en cuantos pasos se realizará el cómputo y la
 ### Evaluación del rendimiento
 -----
 
-tatattatattat
+La evaluación del rendimiento se hara para 4 procesos y 500.000.000 elementos por proceso.
 
-taaaatatattat
+```sh
+srun sqrt_pipeline 500000000 num_steps
+```
 
+| .....        | 1 Step    | 10 Steps    | 100 Steps   | 500 Steps   | 1.000 Steps | 2.000 Steps | 10.000 Steps |
+| :-----------:|----------:| -----------:| -----------:| -----------:| -----------:| ------------:| ------------:|
+|sqrt_pipeline | 7.124 s   | 6.860 s     | 6.773 s     | 6.680 s     | 6.606 s     | 6.716 s      | 6.732 s      |
+
+
+Se puede observar que los tiempos mejoran hasta aproximadamente las 1.000 iteraciones, y a partir de ahí el rendimiento vuelve a degradarse.
+
+Es decir, el punto óptimo para 4 procesos se encuentra aproximadamente cuando cada proceso computa y comunica bloques de 500.000 elementos.
